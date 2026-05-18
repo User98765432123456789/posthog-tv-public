@@ -38,7 +38,7 @@ def capture(url: str, render_wait_ms: int) -> None:
             page.set_default_timeout(NAVIGATION_TIMEOUT_MS)
 
             logger.info("Navigating to dashboard URL")
-            page.goto(url, wait_until="networkidle")
+            page.goto(url, wait_until="domcontentloaded")
 
             logger.info("Waiting %d ms for charts to settle", render_wait_ms)
             page.wait_for_timeout(render_wait_ms)
