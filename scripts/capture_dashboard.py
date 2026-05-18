@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 
 VIEWPORT_WIDTH = 1920
 VIEWPORT_HEIGHT = 1080
-DEFAULT_RENDER_WAIT_MS = 15000
+DEFAULT_RENDER_WAIT_MS = 45000
 NAVIGATION_TIMEOUT_MS = 60000
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
