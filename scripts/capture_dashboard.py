@@ -16,8 +16,8 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 logger = logging.getLogger(__name__)
 
-VIEWPORT_WIDTH = 1920
-VIEWPORT_HEIGHT = 1080
+VIEWPORT_WIDTH = 3840
+VIEWPORT_HEIGHT = 2160
 DEFAULT_RENDER_WAIT_MS = 45000
 NAVIGATION_TIMEOUT_MS = 60000
 
@@ -40,8 +40,15 @@ def capture(url: str, render_wait_ms: int) -> None:
             logger.info("Navigating to dashboard URL")
             page.goto(url, wait_until="domcontentloaded")
 
-            logger.info("Waiting %d ms for charts to settle", render_wait_ms)
-            page.wait_for_timeout(render_wait_ms)
+            logger.info("Waiting for insights to finish loading (timeout %d ms)", render_wait_ms)
+            try:
+                page.wait_for_function(
+                    "document.querySelectorAll('.LemonSkeleton').length === 0",
+                    timeout=render_wait_ms,
+                )
+            except PlaywrightTimeout:
+                logger.warning("Timed out waiting for skeletons to clear, proceeding anyway")
+            page.wait_for_timeout(2000)
 
             logger.info("Capturing PNG -> %s", PNG_PATH)
             page.screenshot(path=str(PNG_PATH), full_page=False)
