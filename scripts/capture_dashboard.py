@@ -40,6 +40,21 @@ def capture(url: str, render_wait_ms: int) -> None:
             logger.info("Navigating to dashboard URL")
             page.goto(url, wait_until="domcontentloaded")
 
+            logger.info("Waiting for PostHog app to mount")
+            try:
+                page.wait_for_selector(".InsightCard, .Dashboard", timeout=30000)
+            except PlaywrightTimeout:
+                logger.warning("Dashboard/InsightCard not found — page may have a different structure")
+
+            logger.info("Waiting for insights to start loading")
+            try:
+                page.wait_for_function(
+                    "document.querySelectorAll('.LemonSkeleton').length > 0",
+                    timeout=15000,
+                )
+            except PlaywrightTimeout:
+                logger.warning("No skeletons appeared — page may have loaded instantly")
+
             logger.info("Waiting for insights to finish loading (timeout %d ms)", render_wait_ms)
             try:
                 page.wait_for_function(
