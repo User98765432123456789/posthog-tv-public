@@ -16,8 +16,8 @@ from playwright.sync_api import sync_playwright, TimeoutError as PlaywrightTimeo
 
 logger = logging.getLogger(__name__)
 
-VIEWPORT_WIDTH = 3840
-VIEWPORT_HEIGHT = 2160
+VIEWPORT_WIDTH = 1920
+VIEWPORT_HEIGHT = 1080
 DEFAULT_RENDER_WAIT_MS = 45000
 NAVIGATION_TIMEOUT_MS = 60000
 
