@@ -1,7 +1,7 @@
-"""Capture a public PostHog dashboard as PNG and PDF using headless Chromium.
+"""Capture public PostHog dashboards as PNG using headless Chromium.
 
-Reads POSTHOG_DASHBOARD_URL from environment (or .env locally).
-Outputs dashboard.png and dashboard.pdf at the repo root.
+Reads POSTHOG_DASHBOARD_URL_1 … POSTHOG_DASHBOARD_URL_8 from environment.
+Outputs dashboard1.png … dashboard8.png at the repo root.
 """
 
 from __future__ import annotations
@@ -22,11 +22,10 @@ DEFAULT_RENDER_WAIT_MS = 45000
 NAVIGATION_TIMEOUT_MS = 60000
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-PNG_PATH = REPO_ROOT / "dashboard.png"
-PDF_PATH = REPO_ROOT / "dashboard.pdf"
 
 
-def capture(url: str, render_wait_ms: int) -> None:
+def capture(url: str, index: int, render_wait_ms: int) -> None:
+    png_path = REPO_ROOT / f"dashboard{index}.png"
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         try:
@@ -37,45 +36,36 @@ def capture(url: str, render_wait_ms: int) -> None:
             page = context.new_page()
             page.set_default_timeout(NAVIGATION_TIMEOUT_MS)
 
-            logger.info("Navigating to dashboard URL")
+            logger.info("[%d] Navigating to dashboard URL", index)
             page.goto(url, wait_until="domcontentloaded")
 
-            logger.info("Waiting for PostHog app to mount")
+            logger.info("[%d] Waiting for PostHog app to mount", index)
             try:
                 page.wait_for_selector(".InsightCard, .Dashboard", timeout=30000)
             except PlaywrightTimeout:
-                logger.warning("Dashboard/InsightCard not found — page may have a different structure")
+                logger.warning("[%d] Dashboard/InsightCard not found — page may have a different structure", index)
 
-            logger.info("Waiting for insights to start loading")
+            logger.info("[%d] Waiting for insights to start loading", index)
             try:
                 page.wait_for_function(
                     "document.querySelectorAll('.LemonSkeleton').length > 0",
                     timeout=15000,
                 )
             except PlaywrightTimeout:
-                logger.warning("No skeletons appeared — page may have loaded instantly")
+                logger.warning("[%d] No skeletons appeared — page may have loaded instantly", index)
 
-            logger.info("Waiting for insights to finish loading (timeout %d ms)", render_wait_ms)
+            logger.info("[%d] Waiting for insights to finish loading (timeout %d ms)", index, render_wait_ms)
             try:
                 page.wait_for_function(
                     "document.querySelectorAll('.LemonSkeleton').length === 0",
                     timeout=render_wait_ms,
                 )
             except PlaywrightTimeout:
-                logger.warning("Timed out waiting for skeletons to clear, proceeding anyway")
+                logger.warning("[%d] Timed out waiting for skeletons to clear, proceeding anyway", index)
             page.wait_for_timeout(2000)
 
-            logger.info("Capturing PNG -> %s", PNG_PATH)
-            page.screenshot(path=str(PNG_PATH), full_page=False)
-
-            logger.info("Capturing PDF -> %s", PDF_PATH)
-            page.pdf(
-                path=str(PDF_PATH),
-                width=f"{VIEWPORT_WIDTH}px",
-                height=f"{VIEWPORT_HEIGHT}px",
-                print_background=True,
-                margin={"top": "0", "right": "0", "bottom": "0", "left": "0"},
-            )
+            logger.info("[%d] Capturing PNG -> %s", index, png_path)
+            page.screenshot(path=str(png_path), full_page=False)
         finally:
             browser.close()
 
@@ -87,28 +77,35 @@ def main() -> int:
         format="%(asctime)s %(levelname)s %(message)s",
     )
 
-    url = os.environ.get("POSTHOG_DASHBOARD_URL")
-    if not url:
-        logger.error("POSTHOG_DASHBOARD_URL is not set")
-        return 1
-
     try:
         render_wait_ms = int(os.environ.get("RENDER_WAIT_MS", DEFAULT_RENDER_WAIT_MS))
     except ValueError:
         logger.error("RENDER_WAIT_MS must be an integer (ms)")
         return 1
 
-    try:
-        capture(url, render_wait_ms)
-    except PlaywrightTimeout as exc:
-        logger.error("Timeout while capturing dashboard: %s", exc)
-        return 1
-    except Exception as exc:
-        logger.exception("Capture failed: %s", exc)
+    urls = {
+        i: os.environ.get(f"POSTHOG_DASHBOARD_URL_{i}")
+        for i in range(1, 9)
+    }
+    configured = {i: u for i, u in urls.items() if u}
+
+    if not configured:
+        logger.error("No POSTHOG_DASHBOARD_URL_1 … POSTHOG_DASHBOARD_URL_8 is set")
         return 1
 
-    logger.info("Done")
-    return 0
+    exit_code = 0
+    for index, url in configured.items():
+        try:
+            capture(url, index, render_wait_ms)
+        except PlaywrightTimeout as exc:
+            logger.error("[%d] Timeout while capturing dashboard: %s", index, exc)
+            exit_code = 1
+        except Exception as exc:
+            logger.exception("[%d] Capture failed: %s", index, exc)
+            exit_code = 1
+
+    logger.info("Done (%d/%d captured)", len(configured) - exit_code, len(configured))
+    return exit_code
 
 
 if __name__ == "__main__":
