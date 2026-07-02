@@ -62,7 +62,22 @@ def capture(url: str, index: int, render_wait_ms: int) -> None:
                 )
             except PlaywrightTimeout:
                 logger.warning("[%d] Timed out waiting for skeletons to clear, proceeding anyway", index)
-            page.wait_for_timeout(2000)
+
+            logger.info("[%d] Waiting for 'Loading' indicators to disappear", index)
+            try:
+                page.wait_for_function(
+                    """() => !Array.from(document.querySelectorAll('.LemonTag--warning, [class*="loading"]'))
+                        .some(el => el.textContent.trim() === 'Loading')
+                        && !Array.from(document.querySelectorAll('*'))
+                        .some(el => el.childNodes.length === 1
+                            && el.childNodes[0].nodeType === 3
+                            && el.childNodes[0].textContent.trim() === 'Loading')""",
+                    timeout=60000,
+                )
+            except PlaywrightTimeout:
+                logger.warning("[%d] Timed out waiting for 'Loading' text to clear, proceeding anyway", index)
+
+            page.wait_for_timeout(5000)
 
             logger.info("[%d] Capturing PNG -> %s", index, png_path)
             page.screenshot(path=str(png_path), full_page=False)
