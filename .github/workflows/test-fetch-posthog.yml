@@ -1,0 +1,33 @@
+name: Test fetch PostHog data
+
+# Temporary: validate fetch_posthog_data.py parsing against the real API
+# before wiring it into the main slide generation workflow. Manual only,
+# never commits anything.
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch PostHog KPIs
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+        run: python scripts/fetch_posthog_data.py
+
+      - name: Show fetched JSON
+        run: cat data/posthog_data.json

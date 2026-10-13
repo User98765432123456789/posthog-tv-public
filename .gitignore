@@ -11,6 +11,9 @@ env/
 .env
 .env.local
 
+# Intermediate fetched data - regenerated each run
+data/
+
 # OS
 .DS_Store
 Thumbs.db
