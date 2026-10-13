@@ -156,7 +156,7 @@ def main() -> int:
     output = {
         "total_domains": extract_counter(results["total_domains"]),
         "total_docs": extract_counter(results["total_docs"]),
-        "total_users": extract_counter(results["total_users"]),
+        "total_users": sum(users_breakdown.values()),
         "users_client": pick_user_count(users_breakdown, "client"),
         "users_collab": pick_user_count(users_breakdown, "collab"),
         "cumulative_domains": extract_series(results["cumulative_domains"]),
