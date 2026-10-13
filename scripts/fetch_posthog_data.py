@@ -28,8 +28,10 @@ REQUEST_TIMEOUT = 30
 REPO_ROOT = Path(__file__).resolve().parent.parent
 OUTPUT_PATH = REPO_ROOT / "data" / "posthog_data.json"
 
-# Tile name (as configured in PostHog) -> role used below.
-NAME_TO_ROLE = {
+# Distinctive substring (lowercase) found in the tile name -> role used below.
+# Tile names carry a variable prefix ("mySilae Contrats – " / "mySilae Contrats - ")
+# so we match on the distinctive tail instead of the full name.
+NAME_KEYWORD_TO_ROLE = {
     "total activated domains": "total_domains",
     "total documents generated": "total_docs",
     "total active users": "total_users",
@@ -130,14 +132,14 @@ def main() -> int:
         if not insight:
             continue
         name = (insight.get("name") or "").strip().lower()
-        role = NAME_TO_ROLE.get(name)
+        role = next((r for kw, r in NAME_KEYWORD_TO_ROLE.items() if kw in name), None)
         if not role:
             logger.info("Skipping unmapped tile: %r (id=%s)", insight.get("name"), insight.get("id"))
             continue
         insights_by_role[role] = insight
         logger.info("Matched tile %r -> role %s (insight id=%s)", insight.get("name"), role, insight.get("id"))
 
-    missing = sorted(set(NAME_TO_ROLE.values()) - set(insights_by_role))
+    missing = sorted(set(NAME_KEYWORD_TO_ROLE.values()) - set(insights_by_role))
     if missing:
         logger.error("Could not find dashboard tiles for roles: %s", missing)
         return 1
