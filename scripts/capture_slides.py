@@ -1,9 +1,9 @@
-"""Capture the generated mySilae Contrats slide as a PNG using headless Chromium.
+"""Capture a generated slide as a PNG using headless Chromium.
 
-Reads output/slide_contrats.html (produced by generate_slides.py) and
-writes slide_contrats.png at the repo root, at 1920x1080 - same approach
-as capture_dashboard.py, but against a local file instead of a PostHog
-share URL.
+Usage: capture_slides.py [html_path] [png_path]
+Defaults to output/slide_contrats.html -> slide_contrats.png (repo root)
+when no arguments are given. Same approach as capture_dashboard.py, but
+against a local file instead of a PostHog share URL.
 """
 
 from __future__ import annotations
@@ -21,11 +21,11 @@ VIEWPORT_HEIGHT = 1080
 FONTS_TIMEOUT_MS = 15000
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-HTML_PATH = REPO_ROOT / "output" / "slide_contrats.html"
-PNG_PATH = REPO_ROOT / "slide_contrats.png"
+DEFAULT_HTML_PATH = REPO_ROOT / "output" / "slide_contrats.html"
+DEFAULT_PNG_PATH = REPO_ROOT / "slide_contrats.png"
 
 
-def capture() -> None:
+def capture(html_path: Path, png_path: Path) -> None:
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         try:
@@ -35,8 +35,8 @@ def capture() -> None:
             )
             page = context.new_page()
 
-            logger.info("Opening %s", HTML_PATH)
-            page.goto(HTML_PATH.as_uri(), wait_until="networkidle")
+            logger.info("Opening %s", html_path)
+            page.goto(html_path.as_uri(), wait_until="networkidle")
 
             logger.info("Waiting for Google Fonts to finish loading")
             try:
@@ -46,8 +46,8 @@ def capture() -> None:
 
             page.wait_for_timeout(500)
 
-            logger.info("Capturing PNG -> %s", PNG_PATH)
-            page.screenshot(path=str(PNG_PATH), full_page=False)
+            logger.info("Capturing PNG -> %s", png_path)
+            page.screenshot(path=str(png_path), full_page=False)
         finally:
             browser.close()
 
@@ -55,12 +55,15 @@ def capture() -> None:
 def main() -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
-    if not HTML_PATH.exists():
-        logger.error("%s not found - run generate_slides.py first", HTML_PATH)
+    html_path = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else DEFAULT_HTML_PATH
+    png_path = Path(sys.argv[2]).resolve() if len(sys.argv) > 2 else DEFAULT_PNG_PATH
+
+    if not html_path.exists():
+        logger.error("%s not found - generate the slide HTML first", html_path)
         return 1
 
     try:
-        capture()
+        capture(html_path, png_path)
     except Exception:
         logger.exception("Capture failed")
         return 1

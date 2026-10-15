@@ -1,0 +1,57 @@
+name: Test fetch mySilae Entreprise data
+
+# Temporary: validate fetch_entreprise_data.py + generate_entreprise_slide.py
+# against the real API before wiring them into a production workflow.
+# Manual only, never commits anything.
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Chromium for Playwright
+        run: python -m playwright install --with-deps chromium
+
+      - name: Fetch mySilae Entreprise KPIs
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+        run: python scripts/fetch_entreprise_data.py
+
+      - name: Show fetched JSON
+        run: cat data/posthog_entreprise_data.json
+
+      - name: Generate slide HTML
+        run: python scripts/generate_entreprise_slide.py
+
+      - name: Show generated HTML
+        run: cat output/slide_entreprise.html
+
+      - name: Upload generated HTML as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: slide-entreprise-html
+          path: output/slide_entreprise.html
+
+      - name: Capture slide PNG
+        run: python scripts/capture_slides.py output/slide_entreprise.html slide_entreprise.png
+
+      - name: Upload generated PNG as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: slide-entreprise-png
+          path: slide_entreprise.png
