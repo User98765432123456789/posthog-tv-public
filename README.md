@@ -30,7 +30,7 @@ A GitHub Actions workflow runs every hour:
 If any step fails, the workflow fails and the previous artifacts remain
 untouched — the display keeps showing the last valid snapshot.
 
-A second workflow runs once a day at 7:00 UTC (8:00 in winter, 9:00 in
+A second workflow runs every Monday at 7:00 UTC (8:00 in winter, 9:00 in
 summer CEST — GitHub Actions cron has no timezone support) to build the
 corporate "mySilae Contrats" slide:
 
