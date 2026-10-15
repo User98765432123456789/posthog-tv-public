@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
@@ -105,13 +106,6 @@ def extract_series(result: list) -> dict[str, list]:
     return {"days": days, "data": [round(v) for v in data]}
 
 
-def pick_user_count(counters: dict[str, int], *needles: str) -> int:
-    for label, value in counters.items():
-        if any(needle in label for needle in needles):
-            return value
-    return 0
-
-
 def main() -> int:
     load_dotenv()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
@@ -148,29 +142,28 @@ def main() -> int:
     for role, insight in insights_by_role.items():
         results[role] = fetch_insight_result(session, insight["id"])
 
-    users_breakdown = extract_breakdown_counters(results["total_users"])
+    # "Total Active Users" is broken down by role (Client/Collab) in PostHog;
+    # we sum every breakdown bucket rather than show the split.
+    total_users = sum(extract_breakdown_counters(results["total_users"]).values())
 
-    now = __import__("datetime").datetime.utcnow()
+    now = datetime.now(timezone.utc)
     date_maj = f"{now.day} {FR_MONTHS[now.month - 1]} {now.year}"
 
     output = {
         "total_domains": extract_counter(results["total_domains"]),
         "total_docs": extract_counter(results["total_docs"]),
-        "total_users": sum(users_breakdown.values()),
-        "users_client": pick_user_count(users_breakdown, "client"),
-        "users_collab": pick_user_count(users_breakdown, "collab"),
+        "total_users": total_users,
         "cumulative_domains": extract_series(results["cumulative_domains"]),
         "cumulative_docs": extract_series(results["cumulative_docs"]),
         "date_maj": date_maj,
-        "fetched_at": now.isoformat() + "Z",
+        "fetched_at": now.isoformat(),
     }
 
     OUTPUT_PATH.parent.mkdir(parents=True, exist_ok=True)
     OUTPUT_PATH.write_text(json.dumps(output, ensure_ascii=False, indent=2), encoding="utf-8")
     logger.info("Wrote %s", OUTPUT_PATH)
-    logger.info("KPIs: %s domaines, %s docs, %s users (%s client / %s collab)",
-                output["total_domains"], output["total_docs"], output["total_users"],
-                output["users_client"], output["users_collab"])
+    logger.info("KPIs: %s domaines, %s docs, %s users",
+                output["total_domains"], output["total_docs"], output["total_users"])
     return 0
 
 
