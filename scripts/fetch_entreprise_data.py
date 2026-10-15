@@ -59,6 +59,11 @@ def fetch_single_insight_result(session: requests.Session, dashboard_id: int) ->
         f"/api/projects/{PROJECT_ID}/insights/{insight['id']}/",
         params={"refresh": "true"},
     )
+    filters = data.get("filters") or {}
+    logger.info(
+        "Dashboard %s insight date config: date_from=%s date_to=%s interval=%s",
+        dashboard_id, filters.get("date_from"), filters.get("date_to"), filters.get("interval"),
+    )
     return data.get("result") or []
 
 
@@ -131,6 +136,10 @@ def main() -> int:
 
     cumulative_users = extract_series(cumulative_result)
     days = cumulative_users["days"]
+    logger.info(
+        "Cumulative series: %d points, last 5 = %s",
+        len(days), list(zip(days[-5:], cumulative_users["data"][-5:])),
+    )
 
     output = {
         "total_users": extract_counter(total_users_result),

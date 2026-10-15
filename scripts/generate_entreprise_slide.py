@@ -48,7 +48,7 @@ MONTHS_LONG = [
 # of which profile has the most users. Any unexpected category (not one of
 # these three) is appended after, in a fallback color.
 PROFILE_ORDER = ["Admin", "Manager", "Employé"]
-PROFILE_COLORS = {"Admin": "#C94E36", "Manager": "#E8634A", "Employé": "#F2A68C"}
+PROFILE_COLORS = {"Admin": "#8B3A2B", "Manager": "#E8634A", "Employé": "#F2A68C"}
 FALLBACK_COLORS = ["#FBD8C7", "#8A6B5E", "#D9A48C"]
 
 
