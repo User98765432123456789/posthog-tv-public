@@ -83,17 +83,32 @@ def extract_series(result: list) -> dict[str, list]:
     return {"days": days, "data": [round(v) for v in data]}
 
 
+# PostHog's raw breakdown property values -> display label. Anything not
+# listed here falls back to a capitalized version of the raw value.
+LABEL_DISPLAY_MAP = {
+    "admin": "Admin",
+    "manager": "Manager",
+    "employee": "Employé",
+}
+
+
 def extract_breakdown(result: list) -> list[dict]:
-    """Returns [{"label": ..., "value": ...}, ...] sorted by value descending."""
+    """Returns [{"label": ..., "value": ...}, ...]. breakdown_value can come
+    back as a single-element list (e.g. ["employee"]) rather than a plain
+    string, depending on how the insight is configured."""
     rows = []
     for series in result:
-        raw_label = str(series.get("breakdown_value") or series.get("label") or "unknown")
+        raw = series.get("breakdown_value") or series.get("label") or "unknown"
+        if isinstance(raw, (list, tuple)):
+            raw = raw[0] if raw else "unknown"
+        raw = str(raw).strip().lower()
+        label = LABEL_DISPLAY_MAP.get(raw, raw.capitalize())
+
         data = series.get("data") or []
         value = series.get("aggregated_value")
         if value is None:
             value = data[-1] if data else series.get("count", 0)
-        rows.append({"label": raw_label.strip().capitalize(), "value": round(value)})
-    rows.sort(key=lambda r: r["value"], reverse=True)
+        rows.append({"label": label, "value": round(value)})
     logger.info("Breakdown rows: %s", rows)
     return rows
 

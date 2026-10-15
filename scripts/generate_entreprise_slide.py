@@ -44,7 +44,12 @@ MONTHS_LONG = [
     "juillet", "août", "septembre", "octobre", "novembre", "décembre",
 ]
 
-DONUT_COLORS = ["#C94E36", "#E8634A", "#F2A68C", "#FBD8C7"]
+# Fixed display order and color per profile - darkest to lightest, regardless
+# of which profile has the most users. Any unexpected category (not one of
+# these three) is appended after, in a fallback color.
+PROFILE_ORDER = ["Admin", "Manager", "Employé"]
+PROFILE_COLORS = {"Admin": "#C94E36", "Manager": "#E8634A", "Employé": "#F2A68C"}
+FALLBACK_COLORS = ["#FBD8C7", "#8A6B5E", "#D9A48C"]
 
 
 def format_int_fr(value: int) -> str:
@@ -66,9 +71,9 @@ def format_compact_fr(value: float) -> str:
 
 
 def format_date_short(iso_date: str) -> str:
-    """"2024-02-15" -> "févr. 2024" - the data spans years, so axis ticks need the year, not the day."""
+    """"2024-02-15" -> "févr. 24" - the data spans years, so axis ticks need the year, not the day."""
     year, month, _ = iso_date.split("-")
-    return f"{MONTHS_SHORT[int(month) - 1]} {year}"
+    return f"{MONTHS_SHORT[int(month) - 1]} {year[2:]}"
 
 
 def format_month_year(iso_date: str) -> str:
@@ -182,8 +187,21 @@ def build_cumulative_svg(days: list[str], data: list[int]) -> str:
 </svg>"""
 
 
+def order_breakdown(breakdown: list[dict]) -> list[dict]:
+    """Admin, then Manager, then Employé - regardless of which has the most
+    users. Any unexpected category is appended after, sorted by value."""
+    by_label = {row["label"]: row["value"] for row in breakdown}
+    ordered = []
+    for label in PROFILE_ORDER:
+        if label in by_label:
+            ordered.append({"label": label, "value": by_label.pop(label)})
+    for label, value in sorted(by_label.items(), key=lambda kv: kv[1], reverse=True):
+        ordered.append({"label": label, "value": value})
+    return ordered
+
+
 def build_donut(breakdown: list[dict]) -> tuple[str, str]:
-    """Returns (donut_svg, legend_rows_html). breakdown already sorted desc by value."""
+    """Returns (donut_svg, legend_rows_html)."""
     if not breakdown:
         logger.warning("Empty breakdown, rendering an empty donut")
         return (
@@ -191,6 +209,7 @@ def build_donut(breakdown: list[dict]) -> tuple[str, str]:
             "",
         )
 
+    breakdown = order_breakdown(breakdown)
     total = sum(row["value"] for row in breakdown) or 1
     r = 76
     circumference = 2 * math.pi * r
@@ -198,9 +217,13 @@ def build_donut(breakdown: list[dict]) -> tuple[str, str]:
     circles = []
     legend_rows = []
     cumulative_fraction = 0.0
-    for i, row in enumerate(breakdown):
+    fallback_index = 0
+    for row in breakdown:
         fraction = row["value"] / total
-        color = DONUT_COLORS[i % len(DONUT_COLORS)]
+        color = PROFILE_COLORS.get(row["label"])
+        if color is None:
+            color = FALLBACK_COLORS[fallback_index % len(FALLBACK_COLORS)]
+            fallback_index += 1
         length = fraction * circumference
         offset = -(cumulative_fraction * circumference)
         circles.append(
