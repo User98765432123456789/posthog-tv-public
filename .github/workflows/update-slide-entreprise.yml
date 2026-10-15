@@ -1,0 +1,52 @@
+name: Update slide_entreprise
+
+on:
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install Chromium for Playwright
+        run: python -m playwright install --with-deps chromium
+
+      - name: Fetch mySilae Entreprise KPIs
+        env:
+          POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
+        run: python scripts/fetch_entreprise_data.py
+
+      - name: Generate slide HTML
+        run: python scripts/generate_entreprise_slide.py
+
+      - name: Capture slide PNG
+        run: python scripts/capture_slides.py output/slide_entreprise.html slide_entreprise.png
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add slide_entreprise.png
+          if git diff --quiet --cached; then
+            echo "No changes to commit."
+            exit 0
+          fi
+          git commit -m "chore: update slide_entreprise snapshot ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
+          git push

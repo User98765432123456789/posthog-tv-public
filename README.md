@@ -16,6 +16,7 @@ digital signage on Samsung VXT screens.
 | 7 | https://user98765432123456789.github.io/posthog-tv-public/dashboard7.png |
 | 8 | https://user98765432123456789.github.io/posthog-tv-public/dashboard8.png |
 | mySilae Contrats slide | https://user98765432123456789.github.io/posthog-tv-public/slide_contrats.png |
+| mySilae Entreprise slide | https://user98765432123456789.github.io/posthog-tv-public/slide_entreprise.png |
 
 ## How it works
 
@@ -37,6 +38,15 @@ corporate "mySilae Contrats" slide:
 1. Fetches KPIs from the PostHog API (dashboard `938631`, project `17613`).
 2. Injects them into `templates/slide_contrats.html` via `scripts/generate_slides.py`.
 3. Screenshots the result with Playwright to `slide_contrats.png`.
+4. Commits and pushes it if it differs.
+
+A third workflow, on the same weekly schedule, builds the "mySilae
+Entreprise" slide (3M+ registered-users milestone, project `15566`,
+dashboards `760832`/`755511`/`737242`):
+
+1. Fetches KPIs from the PostHog API via `scripts/fetch_entreprise_data.py`.
+2. Injects them into `templates/slide_entreprise.html` via `scripts/generate_entreprise_slide.py`.
+3. Screenshots the result with Playwright to `slide_entreprise.png`.
 4. Commits and pushes it if it differs.
 
 ## Setup
@@ -65,11 +75,11 @@ Secrets that are left empty are silently skipped. At least one must be set.
 
 In repository settings → Pages, set Source to `main` branch, root folder.
 
-### 4. Add the PostHog API key (for the mySilae Contrats slide)
+### 4. Add the PostHog API key (for the mySilae Contrats and mySilae Entreprise slides)
 
 Create a personal API key on `eu.posthog.com` (Settings → Personal API
-keys) with read access to the project, then add it as a repository
-secret named `POSTHOG_API_KEY`.
+keys) with read access to both projects (`17613` and `15566`), then add
+it as a repository secret named `POSTHOG_API_KEY`.
 
 ## Local development
 
@@ -93,6 +103,14 @@ python scripts/generate_slides.py      # writes output/slide_contrats.html
 python scripts/capture_slides.py       # writes slide_contrats.png
 ```
 
+For the mySilae Entreprise slide:
+
+```bash
+python scripts/fetch_entreprise_data.py     # writes data/posthog_entreprise_data.json
+python scripts/generate_entreprise_slide.py # writes output/slide_entreprise.html
+python scripts/capture_slides.py output/slide_entreprise.html slide_entreprise.png
+```
+
 ## Configuration
 
 All configuration is via environment variables (see `.env.example`):
@@ -102,5 +120,6 @@ All configuration is via environment variables (see `.env.example`):
 
 ## Manual run
 
-From the GitHub Actions tab, select the **Update dashboard** or
-**Update slide_contrats** workflow and click **Run workflow**.
+From the GitHub Actions tab, select the **Update dashboard**,
+**Update slide_contrats**, or **Update slide_entreprise** workflow and
+click **Run workflow**.
