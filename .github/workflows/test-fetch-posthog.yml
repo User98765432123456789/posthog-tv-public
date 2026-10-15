@@ -24,6 +24,9 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
+      - name: Install Chromium for Playwright
+        run: python -m playwright install --with-deps chromium
+
       - name: Fetch PostHog KPIs
         env:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
@@ -43,3 +46,12 @@ jobs:
         with:
           name: slide-contrats-html
           path: output/slide_contrats.html
+
+      - name: Capture slide PNG
+        run: python scripts/capture_slides.py
+
+      - name: Upload generated PNG as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: slide-contrats-png
+          path: slide_contrats.png
