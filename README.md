@@ -15,6 +15,7 @@ digital signage on Samsung VXT screens.
 | 6 | https://user98765432123456789.github.io/posthog-tv-public/dashboard6.png |
 | 7 | https://user98765432123456789.github.io/posthog-tv-public/dashboard7.png |
 | 8 | https://user98765432123456789.github.io/posthog-tv-public/dashboard8.png |
+| mySilae Contrats slide | https://user98765432123456789.github.io/posthog-tv-public/slide_contrats.png |
 
 ## How it works
 
@@ -28,6 +29,15 @@ A GitHub Actions workflow runs every hour:
 
 If any step fails, the workflow fails and the previous artifacts remain
 untouched — the display keeps showing the last valid snapshot.
+
+A second workflow runs once a day at 7:00 UTC (8:00 in winter, 9:00 in
+summer CEST — GitHub Actions cron has no timezone support) to build the
+corporate "mySilae Contrats" slide:
+
+1. Fetches KPIs from the PostHog API (dashboard `938631`, project `17613`).
+2. Injects them into `templates/slide_contrats.html` via `scripts/generate_slides.py`.
+3. Screenshots the result with Playwright to `slide_contrats.png`.
+4. Commits and pushes it if it differs.
 
 ## Setup
 
@@ -55,6 +65,12 @@ Secrets that are left empty are silently skipped. At least one must be set.
 
 In repository settings → Pages, set Source to `main` branch, root folder.
 
+### 4. Add the PostHog API key (for the mySilae Contrats slide)
+
+Create a personal API key on `eu.posthog.com` (Settings → Personal API
+keys) with read access to the project, then add it as a repository
+secret named `POSTHOG_API_KEY`.
+
 ## Local development
 
 ```bash
@@ -68,6 +84,15 @@ python scripts/capture_dashboard.py
 
 The script writes `dashboard1.png` … `dashboard8.png` to the repo root.
 
+For the mySilae Contrats slide:
+
+```bash
+cp .env.example .env     # then edit .env with POSTHOG_API_KEY
+python scripts/fetch_posthog_data.py   # writes data/posthog_data.json
+python scripts/generate_slides.py      # writes output/slide_contrats.html
+python scripts/capture_slides.py       # writes slide_contrats.png
+```
+
 ## Configuration
 
 All configuration is via environment variables (see `.env.example`):
@@ -77,5 +102,5 @@ All configuration is via environment variables (see `.env.example`):
 
 ## Manual run
 
-From the GitHub Actions tab, select **Update dashboard** workflow and
-click **Run workflow**.
+From the GitHub Actions tab, select the **Update dashboard** or
+**Update slide_contrats** workflow and click **Run workflow**.
