@@ -11,8 +11,9 @@ env/
 .env
 .env.local
 
-# Intermediate fetched data - regenerated each run
+# Intermediate fetched data / rendered HTML - regenerated each run
 data/
+output/
 
 # OS
 .DS_Store
