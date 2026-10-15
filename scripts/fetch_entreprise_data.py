@@ -24,7 +24,9 @@ logger = logging.getLogger(__name__)
 
 POSTHOG_HOST = "https://eu.posthog.com"
 PROJECT_ID = 15566
-REQUEST_TIMEOUT = 30
+# These insights aggregate ~3M users over a 2+ year range - a `refresh=true`
+# recompute is much heavier than mySilae Contrats' and can exceed 30s.
+REQUEST_TIMEOUT = 120
 
 DASHBOARD_TOTAL_USERS = 760832
 DASHBOARD_CUMULATIVE_USERS = 755511
