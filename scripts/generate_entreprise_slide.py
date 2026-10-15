@@ -263,7 +263,7 @@ def main() -> int:
     replacements = {
         "{{TOTAL_USERS}}": format_int_fr(data["total_users"]),
         "{{CUMUL_DEPUIS}}": format_month_year(days[0]) if days else "N/A",
-        "{{DERNIERE_MAJ}}": format_date_ddmmyyyy(days[-1]) if days else "N/A",
+        "{{DERNIERE_MAJ}}": format_date_ddmmyyyy(data["fetched_at"][:10]) if data.get("fetched_at") else "N/A",
         "{{CUMULATIVE_USERS_SVG}}": build_cumulative_svg(days, cumulative_users.get("data", [])),
         "{{DONUT_SVG}}": donut_svg,
         "{{LEGEND_ROWS}}": legend_rows,
