@@ -66,13 +66,14 @@ def format_compact_fr(value: float) -> str:
 
 
 def format_date_short(iso_date: str) -> str:
-    _, month, day = iso_date.split("-")
-    return f"{int(day)} {MONTHS_SHORT[int(month) - 1]}"
+    """"2024-02-15" -> "févr. 2024" - the data spans years, so axis ticks need the year, not the day."""
+    year, month, _ = iso_date.split("-")
+    return f"{MONTHS_SHORT[int(month) - 1]} {year}"
 
 
-def format_date_long(iso_date: str) -> str:
-    year, month, day = iso_date.split("-")
-    return f"{int(day)} {MONTHS_LONG[int(month) - 1]} {year}"
+def format_month_year(iso_date: str) -> str:
+    year, month, _ = iso_date.split("-")
+    return f"{MONTHS_LONG[int(month) - 1]} {year}"
 
 
 def format_date_ddmmyyyy(iso_date: str) -> str:
@@ -238,7 +239,7 @@ def main() -> int:
 
     replacements = {
         "{{TOTAL_USERS}}": format_int_fr(data["total_users"]),
-        "{{CUMUL_DEPUIS}}": format_date_long(days[0]) if days else "N/A",
+        "{{CUMUL_DEPUIS}}": format_month_year(days[0]) if days else "N/A",
         "{{DERNIERE_MAJ}}": format_date_ddmmyyyy(days[-1]) if days else "N/A",
         "{{CUMULATIVE_USERS_SVG}}": build_cumulative_svg(days, cumulative_users.get("data", [])),
         "{{DONUT_SVG}}": donut_svg,
