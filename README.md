@@ -31,7 +31,7 @@ A GitHub Actions workflow runs every hour:
 If any step fails, the workflow fails and the previous artifacts remain
 untouched — the display keeps showing the last valid snapshot.
 
-A second workflow runs every Monday at 7:00 UTC (8:00 in winter, 9:00 in
+A second workflow runs daily at 7:00 UTC (8:00 in winter, 9:00 in
 summer CEST — GitHub Actions cron has no timezone support) to build the
 corporate "mySilae Contrats" slide:
 
@@ -40,7 +40,7 @@ corporate "mySilae Contrats" slide:
 3. Screenshots the result with Playwright to `slide_contrats.png`.
 4. Commits and pushes it if it differs.
 
-A third workflow, on the same weekly schedule, builds the "mySilae
+A third workflow, on the same daily schedule, builds the "mySilae
 Entreprise" slide (3M+ registered-users milestone, project `15566`,
 dashboards `760832`/`755511`/`737242`):
 
