@@ -25,8 +25,9 @@ logger = logging.getLogger(__name__)
 POSTHOG_HOST = "https://eu.posthog.com"
 PROJECT_ID = 15566
 # These insights aggregate ~3M users over a 2+ year range - a `refresh=true`
-# recompute is much heavier than mySilae Contrats' and can exceed 30s.
-REQUEST_TIMEOUT = 120
+# recompute is much heavier than mySilae Contrats' and has been observed to
+# exceed 120s under load.
+REQUEST_TIMEOUT = 240
 
 DASHBOARD_TOTAL_USERS = 760832
 DASHBOARD_CUMULATIVE_USERS = 755511
@@ -38,7 +39,11 @@ OUTPUT_PATH = REPO_ROOT / "data" / "posthog_entreprise_data.json"
 
 def api_get(session: requests.Session, path: str, params: dict | None = None) -> dict:
     url = f"{POSTHOG_HOST}{path}"
-    resp = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    try:
+        resp = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    except requests.exceptions.ReadTimeout:
+        logger.warning("Read timeout on %s after %ss, retrying once", url, REQUEST_TIMEOUT)
+        resp = session.get(url, params=params, timeout=REQUEST_TIMEOUT)
     if not resp.ok:
         logger.error("PostHog API error %s on %s: %s", resp.status_code, url, resp.text[:2000])
     resp.raise_for_status()
