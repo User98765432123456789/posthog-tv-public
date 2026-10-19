@@ -26,7 +26,7 @@ VIEWBOX_W = 820
 VIEWBOX_H = 400
 PLOT_LEFT = 56
 PLOT_RIGHT = 810
-PLOT_TOP = 10
+PLOT_TOP = 34
 PLOT_BOTTOM = 330
 X_LABEL_Y = 356
 Y_LABEL_X = 48
@@ -138,7 +138,11 @@ def build_quarterly_bar_svg(days: list[str], data: list[int]) -> str:
     value_labels = []
     for i, (label, value) in enumerate(quarters):
         center_x = PLOT_LEFT + slot_width * (i + 0.5)
-        top_y = map_y(value, y_max)
+        raw_top_y = map_y(value, y_max)
+        # Clip the bar at the plot's top edge when a value exceeds the fixed
+        # y-axis cap, instead of letting it overflow into the label's space.
+        top_y = max(raw_top_y, PLOT_TOP)
+        is_capped = raw_top_y < PLOT_TOP
         height = PLOT_BOTTOM - top_y
         is_edge = i == 0 or i == n - 1
         opacity = "1" if i == n - 1 else "0.35"
@@ -151,7 +155,7 @@ def build_quarterly_bar_svg(days: list[str], data: list[int]) -> str:
             f'font-family="Inter, sans-serif" font-size="13" fill="{LABEL_COLOR}">{label}</text>'
         )
         if is_edge:
-            label_y = max(top_y - 12, PLOT_TOP + 10)
+            label_y = (PLOT_TOP - 14) if is_capped else max(top_y - 12, PLOT_TOP - 14)
             value_labels.append(
                 f'<text x="{center_x:.1f}" y="{label_y:.1f}" text-anchor="middle" '
                 f'font-family="Montserrat, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">{format_bar_label(value)}</text>'
