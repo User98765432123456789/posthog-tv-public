@@ -76,19 +76,24 @@ def format_date_ddmmyyyy(iso_date: str) -> str:
     return f"{day}/{month}/{year}"
 
 
+def nice_step(raw_step: float) -> float:
+    """Rounds up to a "nice" number (1/2/3/4/5/6/8/10 x a power of ten) so
+    that multiplying it by 1-4 for the gridlines stays clean (e.g. 750k,
+    1.5M, 2.25M, 3M), instead of landing on odd values like 875k."""
+    if raw_step <= 0:
+        return 1
+    exponent = math.floor(math.log10(raw_step))
+    fraction = raw_step / (10 ** exponent)
+    for nice_fraction in (1, 2, 3, 4, 5, 6, 8, 10):
+        if fraction <= nice_fraction:
+            return nice_fraction * (10 ** exponent)
+    return 10 * (10 ** exponent)
+
+
 def nice_y_max(value: int) -> int:
     if value <= 0:
         return 100
-    for threshold, step in (
-        (1_000, 100),
-        (10_000, 1_000),
-        (100_000, 10_000),
-        (1_000_000, 100_000),
-        (10_000_000, 500_000),
-    ):
-        if value < threshold:
-            return (value // step + 1) * step
-    return (value // 1_000_000 + 1) * 1_000_000
+    return round(nice_step(value / 4) * 4)
 
 
 def map_y(value: float, y_max: int) -> float:
