@@ -76,24 +76,14 @@ def format_date_ddmmyyyy(iso_date: str) -> str:
     return f"{day}/{month}/{year}"
 
 
-def nice_step(raw_step: float) -> float:
-    """Rounds up to a "nice" number (1/2/3/4/5/6/8/10 x a power of ten) so
-    that multiplying it by 1-4 for the gridlines stays clean (e.g. 750k,
-    1.5M, 2.25M, 3M), instead of landing on odd values like 875k."""
-    if raw_step <= 0:
-        return 1
-    exponent = math.floor(math.log10(raw_step))
-    fraction = raw_step / (10 ** exponent)
-    for nice_fraction in (1, 2, 3, 4, 5, 6, 8, 10):
-        if fraction <= nice_fraction:
-            return nice_fraction * (10 ** exponent)
-    return 10 * (10 ** exponent)
+GRID_STEP = 500_000
 
 
 def nice_y_max(value: int) -> int:
-    if value <= 0:
-        return 100
-    return round(nice_step(value / 4) * 4)
+    """Rounds up to the next whole million (3M, 4M, ...) - gridlines are then
+    drawn every 500k, however many that takes, instead of forcing exactly 4
+    divisions (which could land on an odd number like 875k)."""
+    return max(1_000_000, math.ceil(value / 1_000_000) * 1_000_000)
 
 
 def map_y(value: float, y_max: int) -> float:
@@ -131,12 +121,14 @@ def build_quarterly_bar_svg(days: list[str], data: list[int]) -> str:
 
     gridlines = []
     y_labels = []
-    for frac in (0, 0.25, 0.5, 0.75, 1.0):
-        y = PLOT_BOTTOM - frac * (PLOT_BOTTOM - PLOT_TOP)
+    num_steps = round(y_max / GRID_STEP)
+    for i in range(num_steps + 1):
+        value_at_step = i * GRID_STEP
+        y = PLOT_BOTTOM - (value_at_step / y_max) * (PLOT_BOTTOM - PLOT_TOP)
         gridlines.append(f'<line x1="{PLOT_LEFT}" y1="{y:.1f}" x2="{PLOT_RIGHT}" y2="{y:.1f}" stroke="{GRID_COLOR}" stroke-width="1"/>')
         y_labels.append(
             f'<text x="{Y_LABEL_X}" y="{y + 4:.1f}" text-anchor="end" '
-            f'font-family="Inter, sans-serif" font-size="15" fill="{LABEL_COLOR}">{format_compact_fr(frac * y_max)}</text>'
+            f'font-family="Inter, sans-serif" font-size="15" fill="{LABEL_COLOR}">{format_compact_fr(value_at_step)}</text>'
         )
 
     slot_width = (PLOT_RIGHT - PLOT_LEFT) / n
