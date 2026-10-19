@@ -77,13 +77,12 @@ def format_date_ddmmyyyy(iso_date: str) -> str:
 
 
 GRID_STEP = 500_000
+# Fixed at 3M for now - bump to 4_000_000 by hand once that's no longer enough.
+Y_AXIS_MAX = 3_000_000
 
 
 def nice_y_max(value: int) -> int:
-    """Rounds up to the next whole million (3M, 4M, ...) - gridlines are then
-    drawn every 500k, however many that takes, instead of forcing exactly 4
-    divisions (which could land on an odd number like 875k)."""
-    return max(1_000_000, math.ceil(value / 1_000_000) * 1_000_000)
+    return Y_AXIS_MAX
 
 
 def map_y(value: float, y_max: int) -> float:
