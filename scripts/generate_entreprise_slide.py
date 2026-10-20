@@ -35,11 +35,6 @@ AXIS_COLOR = "rgba(255,255,255,0.3)"
 LABEL_COLOR = "#B8ACA5"
 LINE_COLOR = "#E8634A"
 
-MONTHS_LONG = [
-    "janvier", "février", "mars", "avril", "mai", "juin",
-    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
-]
-
 # Fixed display order and color per profile - darkest to lightest, regardless
 # of which profile has the most users. Any unexpected category (not one of
 # these three) is appended after, in a fallback color.
@@ -64,11 +59,6 @@ def format_compact_fr(value: float) -> str:
         s = s[:-2]
     suffix = " M" if value >= 1_000_000 else " k"
     return s.replace(".", ",") + suffix
-
-
-def format_month_year(iso_date: str) -> str:
-    year, month, _ = iso_date.split("-")
-    return f"{MONTHS_LONG[int(month) - 1]} {year}"
 
 
 def format_date_ddmmyyyy(iso_date: str) -> str:
@@ -247,7 +237,6 @@ def main() -> int:
 
     replacements = {
         "{{TOTAL_USERS}}": format_int_fr(data["total_users"]),
-        "{{CUMUL_DEPUIS}}": format_month_year(days[0]) if days else "N/A",
         "{{DERNIERE_MAJ}}": format_date_ddmmyyyy(data["fetched_at"][:10]) if data.get("fetched_at") else "N/A",
         "{{CUMULATIVE_USERS_SVG}}": build_quarterly_bar_svg(days, cumulative_users.get("data", [])),
         "{{DONUT_SVG}}": donut_svg,
