@@ -68,6 +68,17 @@ def format_date_ddmmyyyy(iso_date: str) -> str:
     return f"{day}/{month}/{year}"
 
 
+MONTHS_LONG = [
+    "janvier", "février", "mars", "avril", "mai", "juin",
+    "juillet", "août", "septembre", "octobre", "novembre", "décembre",
+]
+
+
+def format_month_year(iso_date: str) -> str:
+    year, month, _ = iso_date.split("-")
+    return f"{MONTHS_LONG[int(month) - 1]} {year}"
+
+
 GRID_STEP = 500_000
 # Fixed at 3M for now - bump to 4_000_000 by hand once that's no longer enough.
 Y_AXIS_MAX = 3_000_000
@@ -239,6 +250,7 @@ def main() -> int:
 
     replacements = {
         "{{TOTAL_USERS}}": format_int_fr(data["total_users"]),
+        "{{CUMUL_DEPUIS}}": format_month_year(days[0]) if days else "N/A",
         "{{DERNIERE_MAJ}}": format_date_ddmmyyyy(data["fetched_at"][:10]) if data.get("fetched_at") else "N/A",
         "{{CUMULATIVE_USERS_SVG}}": build_quarterly_bar_svg(days, cumulative_users.get("data", [])),
         "{{DONUT_SVG}}": donut_svg,

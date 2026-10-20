@@ -44,13 +44,18 @@
     flex-direction: column;
   }
 
+  .titre-ligne {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 32px;
+  }
+
   .logo {
-    position: absolute;
-    top: 72px;
-    right: 96px;
-    height: 64px;
+    height: 56px;
     width: auto;
-    z-index: 2;
+    flex-shrink: 0;
+    margin-top: 18px;
   }
 
   .titre {
@@ -59,7 +64,7 @@
     font-size: 64px;
     line-height: 1.1;
     color: var(--gris-texte);
-    max-width: 1600px;
+    max-width: 1400px;
   }
   .titre span {
     color: var(--corail);
@@ -77,6 +82,7 @@
     display: flex;
     gap: 64px;
     margin-top: 56px;
+    align-items: flex-start;
   }
 
   /* --- Bloc gauche : graphique --- */
@@ -84,17 +90,18 @@
     flex: 1.1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
   }
 
   .carte-label {
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
     font-size: 24px;
+    line-height: 1.2;
     color: var(--corail-dark);
     margin-bottom: 18px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
+    white-space: nowrap;
   }
 
   .carte {
@@ -105,13 +112,29 @@
     box-shadow: 0 20px 50px rgba(232, 99, 74, 0.08);
   }
 
+  .bloc-graphique .carte svg {
+    display: block;
+  }
+
   /* --- Bloc droit : KPI hero + donut --- */
   .bloc-droite {
     flex: 1;
     display: flex;
     flex-direction: column;
+  }
+
+  .bloc-droite-items {
+    /* 390px SVG + 36/28px padding + 2px border = the chart card's fixed
+       height, so this stack's top and bottom line up with it. */
+    height: 456px;
+    display: flex;
+    flex-direction: column;
     gap: 28px;
-    justify-content: center;
+  }
+
+  .bloc-droite-items > .kpi,
+  .bloc-droite-items > .donut-carte {
+    flex: 1 0 auto;
   }
 
   .kpi {
@@ -204,34 +227,40 @@
 <body>
   <div class="slide">
     <div class="content">
-      <img class="logo" src="../assets/logo_mysilae_entreprise.png" alt="mySilae Entreprise">
       <div>
-        <div class="titre">mySilae Entreprise franchit le cap des<br><span>3 millions d'utilisateurs&nbsp;!</span></div>
+        <div class="titre-ligne">
+          <div class="titre">mySilae Entreprise franchit le cap</div>
+          <img class="logo" src="../assets/logo_mysilae_entreprise.png" alt="mySilae Entreprise">
+        </div>
+        <div class="titre"><span>des 3 millions d'utilisateurs&nbsp;!</span></div>
         <div class="sous-titre">Un cap symbolique, une réussite collective</div>
       </div>
 
       <div class="corps">
         <div class="bloc-graphique">
-          <div class="carte-label">Utilisateurs inscrits par trimestre</div>
+          <div class="carte-label">Utilisateurs inscrits — cumul depuis {{CUMUL_DEPUIS}}</div>
           <div class="carte">
             {{CUMULATIVE_USERS_SVG}}
           </div>
         </div>
 
         <div class="bloc-droite">
-          <div class="kpi">
-            <div class="kpi-icone">↗</div>
-            <div>
-              <div class="kpi-valeur">{{TOTAL_USERS}}</div>
-              <div class="kpi-texte">utilisateurs inscrits</div>
+          <div class="carte-label" style="visibility: hidden;">&nbsp;</div>
+          <div class="bloc-droite-items">
+            <div class="kpi">
+              <div class="kpi-icone">↗</div>
+              <div>
+                <div class="kpi-valeur">{{TOTAL_USERS}}</div>
+                <div class="kpi-texte">utilisateurs inscrits</div>
+              </div>
             </div>
-          </div>
 
-          <div class="carte donut-carte">
-            {{DONUT_SVG}}
-            <div class="legende">
-              <div class="carte-label" style="margin-bottom: 4px;">Répartition par profil</div>
-              {{LEGEND_ROWS}}
+            <div class="carte donut-carte">
+              {{DONUT_SVG}}
+              <div class="legende">
+                <div class="carte-label" style="margin-bottom: 4px;">Répartition par profil</div>
+                {{LEGEND_ROWS}}
+              </div>
             </div>
           </div>
         </div>
