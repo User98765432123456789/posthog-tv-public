@@ -21,7 +21,7 @@ DATA_PATH = REPO_ROOT / "data" / "posthog_entreprise_data.json"
 TEMPLATE_PATH = REPO_ROOT / "templates" / "slide_entreprise.html"
 OUTPUT_PATH = REPO_ROOT / "output" / "slide_entreprise.html"
 
-# Chart geometry - must match the dark-theme design validated in the template.
+# Chart geometry - must match the light-theme design validated in the template.
 VIEWBOX_W = 820
 VIEWBOX_H = 400
 PLOT_LEFT = 56
@@ -30,10 +30,12 @@ PLOT_TOP = 34
 PLOT_BOTTOM = 330
 X_LABEL_Y = 356
 Y_LABEL_X = 48
-GRID_COLOR = "rgba(255,255,255,0.08)"
-AXIS_COLOR = "rgba(255,255,255,0.3)"
-LABEL_COLOR = "#B8ACA5"
+AXIS_COLOR = "#D9D9D9"
+GRID_COLOR = "#F0E3DF"
+LABEL_COLOR = "#8A8A8A"
 LINE_COLOR = "#E8634A"
+PAST_BAR_COLOR = "#F7D8CE"
+VALUE_LABEL_COLOR = "#C94E36"
 
 # Fixed display order and color per profile - darkest to lightest, regardless
 # of which profile has the most users. Any unexpected category (not one of
@@ -135,10 +137,10 @@ def build_quarterly_bar_svg(days: list[str], data: list[int]) -> str:
         is_capped = raw_top_y < PLOT_TOP
         height = PLOT_BOTTOM - top_y
         is_edge = i == 0 or i == n - 1
-        opacity = "1" if i == n - 1 else "0.35"
+        bar_fill = LINE_COLOR if i == n - 1 else PAST_BAR_COLOR
         bars.append(
             f'<rect x="{center_x - bar_width / 2:.1f}" y="{top_y:.1f}" width="{bar_width:.1f}" '
-            f'height="{height:.1f}" rx="6" fill="{LINE_COLOR}" fill-opacity="{opacity}"/>'
+            f'height="{height:.1f}" rx="6" fill="{bar_fill}"/>'
         )
         x_labels.append(
             f'<text x="{center_x:.1f}" y="{X_LABEL_Y}" text-anchor="middle" '
@@ -148,7 +150,7 @@ def build_quarterly_bar_svg(days: list[str], data: list[int]) -> str:
             label_y = (PLOT_TOP - 14) if is_capped else max(top_y - 12, PLOT_TOP - 14)
             value_labels.append(
                 f'<text x="{center_x:.1f}" y="{label_y:.1f}" text-anchor="middle" '
-                f'font-family="Montserrat, sans-serif" font-size="17" font-weight="700" fill="#FFFFFF">{format_bar_label(value)}</text>'
+                f'font-family="Montserrat, sans-serif" font-size="17" font-weight="700" fill="{VALUE_LABEL_COLOR}">{format_bar_label(value)}</text>'
             )
 
     return f"""<svg viewBox="0 0 {VIEWBOX_W} {VIEWBOX_H}" width="100%" height="390" xmlns="http://www.w3.org/2000/svg">

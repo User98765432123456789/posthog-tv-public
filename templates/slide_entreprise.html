@@ -10,12 +10,10 @@
   :root {
     --corail: #E8634A;
     --corail-dark: #C94E36;
-    --peche: #F2A68C;
-    --fond: #211915;
-    --carte-fond: #2B211C;
-    --carte-bordure: rgba(255, 255, 255, 0.08);
-    --gris-texte: #F3EBE7;
-    --gris-clair: #B8ACA5;
+    --rose-pale: #F7D8CE;
+    --rose-pale-2: #FCEAE4;
+    --gris-texte: #3A3A3A;
+    --gris-clair: #8A8A8A;
   }
 
   * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -24,7 +22,7 @@
     width: 1920px;
     height: 1080px;
     font-family: 'Inter', sans-serif;
-    background: var(--fond);
+    background: #FFFFFF;
     color: var(--gris-texte);
   }
 
@@ -33,34 +31,6 @@
     width: 1920px;
     height: 1080px;
     overflow: hidden;
-  }
-
-  /* --- Formes decoratives abstraites --- */
-  .blob {
-    position: absolute;
-    border-radius: 50%;
-    z-index: 0;
-    background: radial-gradient(circle, var(--corail) 0%, transparent 70%);
-  }
-  .blob--tl {
-    top: -260px; left: -260px;
-    width: 560px; height: 560px;
-    opacity: 0.18;
-  }
-  .blob--tl2 {
-    top: -140px; left: 160px;
-    width: 280px; height: 280px;
-    opacity: 0.12;
-  }
-  .blob--br {
-    bottom: -300px; right: -240px;
-    width: 660px; height: 660px;
-    opacity: 0.18;
-  }
-  .blob--br2 {
-    bottom: 20px; right: 140px;
-    width: 240px; height: 240px;
-    opacity: 0.12;
   }
 
   /* --- Contenu --- */
@@ -72,6 +42,15 @@
     padding: 72px 96px 56px;
     display: flex;
     flex-direction: column;
+  }
+
+  .logo {
+    position: absolute;
+    top: 72px;
+    right: 96px;
+    height: 64px;
+    width: auto;
+    z-index: 2;
   }
 
   .titre {
@@ -100,7 +79,7 @@
     margin-top: 56px;
   }
 
-  /* --- Bloc gauche : courbe --- */
+  /* --- Bloc gauche : graphique --- */
   .bloc-graphique {
     flex: 1.1;
     display: flex;
@@ -112,18 +91,18 @@
     font-family: 'Montserrat', sans-serif;
     font-weight: 700;
     font-size: 24px;
-    color: var(--corail);
+    color: var(--corail-dark);
     margin-bottom: 18px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
 
   .carte {
-    background: var(--carte-fond);
-    border: 1px solid var(--carte-bordure);
+    background: #FFFFFF;
+    border: 1px solid #F0E3DF;
     border-radius: 28px;
     padding: 36px 40px 28px;
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+    box-shadow: 0 20px 50px rgba(232, 99, 74, 0.08);
   }
 
   /* --- Bloc droit : KPI hero + donut --- */
@@ -203,7 +182,7 @@
     font-family: 'Montserrat', sans-serif;
     font-size: 22px;
     font-weight: 800;
-    color: var(--corail);
+    color: var(--corail-dark);
   }
 
   /* --- Pied de page --- */
@@ -224,12 +203,8 @@
 </head>
 <body>
   <div class="slide">
-    <div class="blob blob--tl"></div>
-    <div class="blob blob--tl2"></div>
-    <div class="blob blob--br"></div>
-    <div class="blob blob--br2"></div>
-
     <div class="content">
+      <img class="logo" src="../assets/logo_mysilae_entreprise.png" alt="mySilae Entreprise">
       <div>
         <div class="titre">mySilae Entreprise franchit le cap des<br><span>3 millions d'utilisateurs&nbsp;!</span></div>
         <div class="sous-titre">Un cap symbolique, une réussite collective</div>
