@@ -80,12 +80,14 @@ def format_month_year(iso_date: str) -> str:
 
 
 GRID_STEP = 500_000
-# Fixed at 3M for now - bump to 4_000_000 by hand once that's no longer enough.
-Y_AXIS_MAX = 3_000_000
 
 
 def nice_y_max(value: int) -> int:
-    return Y_AXIS_MAX
+    """Smallest multiple of GRID_STEP that is >= value, so the axis always
+    has headroom above the real data without needing a hand-picked cap."""
+    if value <= 0:
+        return GRID_STEP
+    return math.ceil(value / GRID_STEP) * GRID_STEP
 
 
 def map_y(value: float, y_max: int) -> float:
@@ -112,12 +114,17 @@ def format_bar_label(value: float) -> str:
     return str(round(value))
 
 
-def build_quarterly_bar_svg(days: list[str], data: list[int]) -> str:
+def build_quarterly_bar_svg(days: list[str], data: list[int], total_users: int | None = None) -> str:
     if not days or not data:
         logger.warning("Empty cumulative series, rendering an empty chart frame")
         return f'<svg viewBox="0 0 {VIEWBOX_W} {VIEWBOX_H}" width="100%" height="390" xmlns="http://www.w3.org/2000/svg"></svg>'
 
     quarters = aggregate_by_quarter(days, data)
+    if total_users is not None:
+        # Keep the last bar's value and label in lockstep with the big KPI
+        # counter - the quarterly bucket's own last data point can be a few
+        # thousand users stale relative to the authoritative total.
+        quarters[-1] = (quarters[-1][0], total_users)
     y_max = nice_y_max(max(value for _, value in quarters))
     n = len(quarters)
 
@@ -252,7 +259,7 @@ def main() -> int:
         "{{TOTAL_USERS}}": format_int_fr(data["total_users"]),
         "{{CUMUL_DEPUIS}}": format_month_year(days[0]) if days else "N/A",
         "{{DERNIERE_MAJ}}": format_date_ddmmyyyy(data["fetched_at"][:10]) if data.get("fetched_at") else "N/A",
-        "{{CUMULATIVE_USERS_SVG}}": build_quarterly_bar_svg(days, cumulative_users.get("data", [])),
+        "{{CUMULATIVE_USERS_SVG}}": build_quarterly_bar_svg(days, cumulative_users.get("data", []), data.get("total_users")),
         "{{DONUT_SVG}}": donut_svg,
         "{{LEGEND_ROWS}}": legend_rows,
     }
