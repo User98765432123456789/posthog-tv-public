@@ -107,10 +107,14 @@ def aggregate_by_quarter(days: list[str], data: list[int]) -> list[tuple[str, in
 
 
 def format_bar_label(value: float) -> str:
+    """Truncates rather than rounds, so e.g. 3.056M reads "3,0 M" - never
+    implies a milestone (3,1 M) has been reached before it actually has."""
     if value >= 1_000_000:
-        return f"{value / 1_000_000:.1f}".replace(".", ",") + " M"
+        tenths = int(value) // 100_000
+        return f"{tenths / 10:.1f}".replace(".", ",") + " M"
     if value >= 1_000:
-        return f"{value / 1_000:.1f}".replace(".", ",") + " k"
+        tenths = int(value) // 100
+        return f"{tenths / 10:.1f}".replace(".", ",") + " k"
     return str(round(value))
 
 
