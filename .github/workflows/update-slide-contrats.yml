@@ -2,7 +2,8 @@ name: Update slide_contrats
 
 on:
   schedule:
-    - cron: "0 7 * * *"
+    - cron: "13 4 * * *"
+    - cron: "47 4 * * *"
   workflow_dispatch:
 
 jobs:
@@ -16,30 +17,48 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check if already updated today
+        id: check
+        run: |
+          LAST_DATE=$(git log -1 --format=%cd --date=format:%Y-%m-%d -- slide_contrats.png)
+          TODAY=$(date -u +%Y-%m-%d)
+          if [ "$LAST_DATE" = "$TODAY" ]; then
+            echo "already_done=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "already_done=false" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Setup Python
+        if: github.event_name != 'schedule' || steps.check.outputs.already_done != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
 
       - name: Install Python dependencies
+        if: github.event_name != 'schedule' || steps.check.outputs.already_done != 'true'
         run: pip install -r requirements.txt
 
       - name: Install Chromium for Playwright
+        if: github.event_name != 'schedule' || steps.check.outputs.already_done != 'true'
         run: python -m playwright install --with-deps chromium
 
       - name: Fetch PostHog KPIs
+        if: github.event_name != 'schedule' || steps.check.outputs.already_done != 'true'
         env:
           POSTHOG_API_KEY: ${{ secrets.POSTHOG_API_KEY }}
         run: python scripts/fetch_posthog_data.py
 
       - name: Generate slide HTML
+        if: github.event_name != 'schedule' || steps.check.outputs.already_done != 'true'
         run: python scripts/generate_slides.py
 
       - name: Capture slide PNG
+        if: github.event_name != 'schedule' || steps.check.outputs.already_done != 'true'
         run: python scripts/capture_slides.py
 
       - name: Commit and push if changed
+        if: github.event_name != 'schedule' || steps.check.outputs.already_done != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -49,4 +68,6 @@ jobs:
             exit 0
           fi
           git commit -m "chore: update slide_contrats snapshot ($(date -u +%Y-%m-%dT%H:%M:%SZ))"
+          git fetch origin main
+          git rebase origin/main
           git push
